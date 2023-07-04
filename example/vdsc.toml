@@ -5,6 +5,9 @@ maxsize = 0
 [calendars.aqua]
 url = 'https://club-aquarium.de/events/index.ics'
 
+[calendars.gag18]
+url = 'https://calendar.google.com/calendar/ical/kellerklubgag18@gmail.com/public/basic.ics'
+
 [calendars.'häma']
 url = 'https://www.club-haengemathe.de/events.ics'
 processors = [

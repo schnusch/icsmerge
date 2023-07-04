@@ -13,3 +13,6 @@ processors = [
 
 [calendars.wu5]
 url = 'https://wu5.de/kalender.ics'
+processors = [
+    { name = 'mod_uid', args.suffix = '@wu5.de' },
+]

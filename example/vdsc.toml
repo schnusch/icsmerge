@@ -1,0 +1,15 @@
+destdir = '/tmp/icsmerge/dest'
+workdir = '/tmp/icsmerge/work'
+maxsize = 0
+
+[calendars.aqua]
+url = 'https://club-aquarium.de/events/index.ics'
+
+[calendars.'häma']
+url = 'https://www.club-haengemathe.de/events.ics'
+processors = [
+    { name = 'add_default_timezone', args.utc = true },
+]
+
+[calendars.wu5]
+url = 'https://wu5.de/kalender.ics'

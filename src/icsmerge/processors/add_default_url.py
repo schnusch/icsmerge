@@ -17,28 +17,27 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-import importlib
-from typing import Any, Dict, Type  # noqa: F401
+from typing import Final  # noqa: F401
+from typing import Any, Dict
 
 from icalendar import Calendar  # type: ignore
 
-from ..config.util import ConfigPath
+from ..config.util import ConfigPath, str_option_path
+from . import CalendarProcessor
 
 
-class CalendarProcessor:
-    def __init__(self, args: Any, path: ConfigPath):
-        raise NotImplementedError
+class Processor(CalendarProcessor):
+    def __init__(self, args: Dict[str, Any], path: ConfigPath):
+        if "url" not in args:
+            raise ValueError("missing option %s" % str_option_path(*path, "url"))
+        elif not isinstance(args["url"], str):
+            raise ValueError(
+                "option %s: must be a string" % str_option_path(*path, "url")
+            )
+        else:
+            self.url = args["url"]  # type: Final[str]
 
-    async def run(self, calendar: Calendar) -> None:
-        raise NotImplementedError
-
-
-all_processors = dict(
-    (name, importlib.import_module("." + name, __name__).Processor)
-    for name in [
-        "add_default_timezone",
-        "add_default_url",
-        "filter_out",
-        "mod_uid",
-    ]
-)  # type: Dict[str, Type[CalendarProcessor]]
+    async def run(self, cal: Calendar) -> None:
+        for event in cal.walk("vevent"):
+            if "url" not in event:
+                event.add("url", self.url)

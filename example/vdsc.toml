@@ -1,4 +1,5 @@
 destdir = '/tmp/icsmerge/dest'
+destmode = 0o644
 workdir = '/tmp/icsmerge/work'
 maxsize = 0
 

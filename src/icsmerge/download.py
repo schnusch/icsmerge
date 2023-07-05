@@ -33,7 +33,7 @@ CHUNK_SIZE = 16 * 1024
 logger = logging.getLogger(__name__)
 
 
-def _add_exec_bit(mode: int) -> int:
+def add_exec_bit(mode: int) -> int:
     assert stat.S_IRUSR == stat.S_IXUSR << 2
     assert stat.S_IRGRP == stat.S_IXGRP << 2
     assert stat.S_IROTH == stat.S_IXOTH << 2
@@ -113,7 +113,7 @@ async def download_ics(
             )
 
     if dirmode is None:
-        dirmode = _add_exec_bit(mode)
+        dirmode = add_exec_bit(mode)
     if loop is None:
         loop = asyncio.get_running_loop()
     dest = os.path.join(directory, filename)

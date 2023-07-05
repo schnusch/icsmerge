@@ -29,7 +29,7 @@ from typing import List, Optional
 from icalendar import Calendar  # type: ignore
 
 from .config import CalendarSource, Config, load_config
-from .download import download_ics
+from .download import add_exec_bit, download_ics
 from .ics import PRODID, as_str, list_of_dict_events, merge
 
 logger = logging.getLogger(__name__)
@@ -61,12 +61,13 @@ async def load_calendar(
     return cal
 
 
-def write_ics(destdir: str, cal: Calendar) -> None:
-    os.makedirs(destdir, exist_ok=True)
+def write_ics(destdir: str, destmode: int, cal: Calendar) -> None:
+    os.makedirs(destdir, mode=add_exec_bit(destmode), exist_ok=True)
     tmp = tempfile.NamedTemporaryFile(dir=destdir, prefix=".tmp.", suffix=".ics")
     try:
         tmp.write(cal.to_ical())
         tmp.flush()
+        os.chmod(tmp.fileno(), destmode)
         os.replace(tmp.name, os.path.join(destdir, "calendar.ics"))
     finally:
         # if everything is successful it will have been moved
@@ -78,11 +79,12 @@ def write_ics(destdir: str, cal: Calendar) -> None:
 
 def write_json(
     destdir: str,
+    destmode: int,
     cal: Calendar,
     after: datetime,
     before: datetime,
 ) -> None:
-    os.makedirs(destdir, exist_ok=True)
+    os.makedirs(destdir, mode=add_exec_bit(destmode), exist_ok=True)
     tmp = tempfile.NamedTemporaryFile(
         mode="w",
         encoding="utf-8",
@@ -99,6 +101,7 @@ def write_json(
         json.dump(events, tmp, ensure_ascii=False, indent=2, separators=(",", ": "))
         tmp.write("\n")
         tmp.flush()
+        os.chmod(tmp.fileno(), destmode)
         os.replace(tmp.name, os.path.join(destdir, "calendar.json"))
     finally:
         # if everything is successful it will have been moved
@@ -125,9 +128,10 @@ async def run(config: Config) -> None:
     logger.debug("merging %d calendars...", len(calsrcs))
     now = datetime.now(timezone.utc) - timedelta(hours=12)
     merged = merge(cals, now=now)
-    write_ics(config.destdir, merged)
+    write_ics(config.destdir, config.destmode, merged)
     write_json(
         config.destdir,
+        config.destmode,
         merged,
         after=now,
         before=now + timedelta(weeks=4, days=1),

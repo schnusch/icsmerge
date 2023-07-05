@@ -40,6 +40,7 @@ class CalendarSource:
 class Config:
     destdir: str
     workdir: str
+    destmode: int
     maxsize: int
     calendars: Dict[str, CalendarSource]
 
@@ -142,6 +143,7 @@ def load_config(name: Union[bytes, str]) -> Config:
 
     errors = []  # type: List[str]
     calendars = {}  # type: Dict[str, CalendarSource]
+    destmode = 0o644
     maxsize = 16 * 1024 * 1024
 
     for option in ("destdir", "workdir"):
@@ -149,6 +151,12 @@ def load_config(name: Union[bytes, str]) -> Config:
             errors.append("missing option %r" % option)
         elif not _is_abspath(config[option]):
             errors.append("option %r: must be an absolute path" % option)
+
+    if "destmode" in config:
+        if isinstance(config["destmode"], int):
+            destmode = config["destmode"]
+        else:
+            errors.append("option %s: must be an integer" % option)
 
     if "maxsize" in config:
         try:
@@ -178,6 +186,7 @@ def load_config(name: Union[bytes, str]) -> Config:
     return Config(
         destdir=config["destdir"],
         workdir=config["workdir"],
+        destmode=destmode,
         maxsize=maxsize,
         calendars=calendars,
     )

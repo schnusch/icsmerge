@@ -22,6 +22,7 @@ import asyncio
 import logging
 import os
 import tempfile
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
 from icalendar import Calendar  # type: ignore
@@ -89,7 +90,8 @@ async def run(config: Config) -> None:
         )
     )
     logger.debug("merging %d calendars...", len(calsrcs))
-    merged = merge(cals)
+    now = datetime.now(timezone.utc) - timedelta(hours=12)
+    merged = merge(cals, now=now)
     write_ics(config.destdir, merged)
 
 

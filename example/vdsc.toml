@@ -7,6 +7,9 @@ url = 'https://club-aquarium.de/events/index.ics'
 
 [calendars.gag18]
 url = 'https://calendar.google.com/calendar/ical/kellerklubgag18@gmail.com/public/basic.ics'
+processors = [
+    { name = 'filter_out', args.summary.match = 'Nerd Out!|Büchertauschbörse|Spieleabend' },
+]
 
 [calendars.'häma']
 url = 'https://www.club-haengemathe.de/events.ics'
@@ -17,5 +20,6 @@ processors = [
 [calendars.wu5]
 url = 'https://wu5.de/kalender.ics'
 processors = [
+    { name = 'filter_out', args.summary.match = 'Barabend.*|Termin.*' },
     { name = 'mod_uid', args.suffix = '@wu5.de' },
 ]

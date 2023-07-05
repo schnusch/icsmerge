@@ -37,6 +37,7 @@ all_processors = dict(
     (name, importlib.import_module("." + name, __name__).Processor)
     for name in [
         "add_default_timezone",
+        "filter_out",
         "mod_uid",
     ]
 )  # type: Dict[str, Type[CalendarProcessor]]

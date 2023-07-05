@@ -14,7 +14,7 @@ buildPythonApplication {
   pname = "icsmerge";
   version = "0.0.0";
 
-  disable = pythonOlder "3.7";
+  disable = pythonOlder "3.8";
 
   src = ./.;
 

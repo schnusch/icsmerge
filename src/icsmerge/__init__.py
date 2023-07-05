@@ -19,6 +19,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import argparse
 import asyncio
+import json
 import logging
 import os
 import tempfile
@@ -29,7 +30,7 @@ from icalendar import Calendar  # type: ignore
 
 from .config import CalendarSource, Config, load_config
 from .download import download_ics
-from .ics import PRODID, as_str, merge
+from .ics import PRODID, as_str, list_of_dict_events, merge
 
 logger = logging.getLogger(__name__)
 
@@ -75,6 +76,38 @@ def write_ics(destdir: str, cal: Calendar) -> None:
             pass
 
 
+def write_json(
+    destdir: str,
+    cal: Calendar,
+    after: datetime,
+    before: datetime,
+) -> None:
+    os.makedirs(destdir, exist_ok=True)
+    tmp = tempfile.NamedTemporaryFile(
+        mode="w",
+        encoding="utf-8",
+        dir=destdir,
+        prefix=".tmp.",
+        suffix=".json",
+    )
+    try:
+        events = list_of_dict_events(
+            cal,
+            after=after,
+            before=before,
+        )
+        json.dump(events, tmp, ensure_ascii=False, indent=2, separators=(",", ": "))
+        tmp.write("\n")
+        tmp.flush()
+        os.replace(tmp.name, os.path.join(destdir, "calendar.json"))
+    finally:
+        # if everything is successful it will have been moved
+        try:
+            tmp.close()
+        except FileNotFoundError:
+            pass
+
+
 async def run(config: Config) -> None:
     assert config.calendars, "no calendar sources specified"
     calsrcs = list(config.calendars.items())
@@ -93,6 +126,12 @@ async def run(config: Config) -> None:
     now = datetime.now(timezone.utc) - timedelta(hours=12)
     merged = merge(cals, now=now)
     write_ics(config.destdir, merged)
+    write_json(
+        config.destdir,
+        merged,
+        after=now,
+        before=now + timedelta(weeks=4, days=1),
+    )
 
 
 def main(argv: Optional[List[str]] = None) -> None:

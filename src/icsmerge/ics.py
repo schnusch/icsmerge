@@ -20,13 +20,34 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 import itertools
 from collections.abc import Iterable
 from datetime import date, datetime, time, timezone
-from typing import Any, Dict, Iterator, List, NewType, Optional, Set, Tuple, Union
+from typing import (
+    Any,
+    Dict,
+    Iterator,
+    List,
+    NewType,
+    Optional,
+    Set,
+    Tuple,
+    TypedDict,
+    Union,
+)
 
 from dateutil.rrule import rrulestr  # type: ignore
 from icalendar import Calendar, Event, Timezone  # type: ignore
 from icalendar.cal import Component  # type: ignore
 
 PRODID = "-//icsmerge"
+
+
+class _DictEvent(TypedDict):
+    summary: str
+    dtstart: str
+
+
+class DictEvent(_DictEvent, total=False):
+    location: str
+    url: str
 
 
 def as_str(x: Union[bytes, str]) -> str:
@@ -46,6 +67,52 @@ def iter_property_items(
     if recursive:
         for subcomponent in component.subcomponents:
             yield from iter_property_items(subcomponent)
+
+
+def list_of_dict_events(
+    cal: Calendar,
+    after: datetime,
+    before: datetime,
+) -> List[DictEvent]:
+    events = []  # type: List[DictEvent]
+    for vevent in cal.walk("vevent"):
+        try:
+            summary = as_str(vevent.decoded("summary"))
+            dtstart = vevent.decoded("dtstart")
+        except KeyError:
+            continue
+        location = as_str(vevent.decoded("location", ""))
+        url = as_str(vevent.decoded("url", ""))
+
+        if isinstance(dtstart, time):
+            continue
+        else:
+            assert isinstance(dtstart, (date, datetime))
+
+        try:
+            recur = vevent["rrule"]
+        except KeyError:
+            # yes, inclusive, see rrule.between()
+            if dtstart < (after if isinstance(dtstart, datetime) else after.date()):
+                continue
+            if dtstart > (before if isinstance(dtstart, datetime) else before.date()):
+                continue
+            dtstarts = [dtstart]  # type: Iterable[Union[date, datetime]]
+        else:
+            rrule = rrulestr(as_str(recur.to_ical()), dtstart=dtstart)
+            dtstarts = rrule.between(after, before, inc=True)
+
+        for dtstart in dtstarts:
+            ev = DictEvent(
+                summary=summary,
+                dtstart=dtstart.isoformat(),
+            )
+            if location:
+                ev["location"] = location
+            if url:
+                ev["url"] = url
+            events.append(ev)
+    return events
 
 
 def get_dtend(event: Event) -> Union[date, datetime, time]:

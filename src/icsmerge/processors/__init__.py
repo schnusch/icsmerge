@@ -36,8 +36,8 @@ class CalendarProcessor:
 all_processors = dict(
     (name, importlib.import_module("." + name, __name__).Processor)
     for name in [
+        "add_default_property",
         "add_default_timezone",
-        "add_default_url",
         "filter_out",
         "mod_uid",
     ]

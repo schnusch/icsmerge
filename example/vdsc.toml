@@ -9,7 +9,10 @@ url = 'https://club-aquarium.de/events/index.ics'
 url = 'https://calendar.google.com/calendar/ical/kellerklubgag18@gmail.com/public/basic.ics'
 processors = [
     { name = 'filter_out', args.summary.match = 'Nerd Out!|Büchertauschbörse|Spieleabend' },
-    { name = 'add_default_url', args.url = 'https://www.gag-18.com/veranstaltungen-1/veranstaltungskalender/' },
+    { name = 'add_default_property', args = { url = 'https://www.gag-18.com/veranstaltungen-1/veranstaltungskalender/', location = '''
+Kellerklub GAG 18 e. V.
+Fritz-Löffler-Str. 16
+01069 Dresden''' } },
 ]
 
 [calendars.'häma']
@@ -23,5 +26,8 @@ url = 'https://wu5.de/kalender.ics'
 processors = [
     { name = 'filter_out', args.summary.match = 'Barabend.*|Termin.*' },
     { name = 'mod_uid', args.suffix = '@wu5.de' },
-    { name = 'add_default_url', args.url = 'https://wu5.de/kalender' },
+    { name = 'add_default_property', args = { url = 'https://wu5.de/kalender', location = '''
+Studentenclub Wu5 e. V.
+August-Bebel-Straße 12
+01219 Dresden''' } },
 ]

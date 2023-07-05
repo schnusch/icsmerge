@@ -18,6 +18,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from typing import Final  # noqa: F401
+from typing import List  # noqa: F401
 from typing import Any, Dict
 
 from icalendar import Calendar  # type: ignore
@@ -28,16 +29,23 @@ from . import CalendarProcessor
 
 class Processor(CalendarProcessor):
     def __init__(self, args: Dict[str, Any], path: ConfigPath):
-        if "url" not in args:
-            raise ValueError("missing option %s" % str_option_path(*path, "url"))
-        elif not isinstance(args["url"], str):
-            raise ValueError(
-                "option %s: must be a string" % str_option_path(*path, "url")
-            )
-        else:
-            self.url = args["url"]  # type: Final[str]
+        self.properties = {}  # type: Final[Dict[str, str]]
+        errors = []  # type: List[str]
+        for prop in ("url", "location"):
+            if prop in args:
+                if isinstance(args[prop], str):
+                    self.properties[prop] = args[prop]
+                else:
+                    errors.append(
+                        "option %s: must be a string" % str_option_path(*path, prop)
+                    )
+        if not self.properties and not errors:
+            errors.append("option %s: no properties given" % str_option_path(*path))
+        if errors:
+            raise ValueError("\n".join(errors))
 
     async def run(self, cal: Calendar) -> None:
         for event in cal.walk("vevent"):
-            if "url" not in event:
-                event.add("url", self.url)
+            for prop, value in self.properties.items():
+                if prop not in event:
+                    event.add(prop, value)

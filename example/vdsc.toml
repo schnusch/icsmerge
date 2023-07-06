@@ -18,9 +18,6 @@ Fritz-Löffler-Str. 16
 
 [calendars.'häma']
 url = 'https://www.club-haengemathe.de/events.ics'
-processors = [
-    { name = 'add_default_timezone', args.utc = true },
-]
 
 [calendars.wu5]
 url = 'https://wu5.de/kalender.ics'

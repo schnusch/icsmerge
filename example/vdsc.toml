@@ -6,6 +6,15 @@ maxsize = 0
 [calendars.aqua]
 url = 'https://club-aquarium.de/events/index.ics'
 
+[calendars.baerenzwinter]
+url = 'https://www.exmatrikulationsamt.de/downloads/schnusch/ics/baerenzwinger.ics'
+
+[calendars.club11]
+url = 'https://www.exmatrikulationsamt.de/downloads/schnusch/ics/club11.ics'
+
+[calendars.countdown]
+url = 'https://www.exmatrikulationsamt.de/downloads/schnusch/ics/countdown.ics'
+
 [calendars.gag18]
 url = 'https://calendar.google.com/calendar/ical/kellerklubgag18@gmail.com/public/basic.ics'
 processors = [
@@ -18,6 +27,12 @@ Fritz-Löffler-Str. 16
 
 [calendars.'häma']
 url = 'https://www.club-haengemathe.de/events.ics'
+
+[calendars.'traumtänzer']
+url = 'https://www.exmatrikulationsamt.de/downloads/schnusch/ics/traumtaenzer.ics'
+processors = [
+    { name = 'filter_out', args.summary.match = 'Cocktailabend' },
+]
 
 [calendars.wu5]
 url = 'https://wu5.de/kalender.ics'

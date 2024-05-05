@@ -25,8 +25,14 @@ Fritz-Löffler-Str. 16
 01069 Dresden''' } },
 ]
 
+[calendars.gutzkowclub]
+url = 'https://www.exmatrikulationsamt.de/downloads/schnusch/ics/gutzkowclub.ics'
+
 [calendars.'häma']
 url = 'https://www.club-haengemathe.de/events.ics'
+
+[calendars.novitatis]
+url = 'https://www.exmatrikulationsamt.de/downloads/schnusch/ics/novitatis.ics'
 
 [calendars.'traumtänzer']
 url = 'https://www.exmatrikulationsamt.de/downloads/schnusch/ics/traumtaenzer.ics'

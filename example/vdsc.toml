@@ -9,6 +9,9 @@ url = 'https://club-aquarium.de/events/index.ics'
 [calendars.baerenzwinter]
 url = 'https://www.exmatrikulationsamt.de/downloads/schnusch/ics/baerenzwinger.ics'
 
+[calendars.borsi]
+url = 'https://www.exmatrikulationsamt.de/downloads/schnusch/ics/borsi.ics'
+
 [calendars.club11]
 url = 'https://www.exmatrikulationsamt.de/downloads/schnusch/ics/club11.ics'
 

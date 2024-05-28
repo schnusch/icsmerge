@@ -49,12 +49,12 @@ class EmojiTest(unittest.IsolatedAsyncioTestCase):
     async def test_emoji_start_one_space(self) -> None:
         cal, ev = create_calendar("\U0001F43B lorem  ipsum")
         await self.proc.run(cal)
-        self.assertEqual(as_str(ev.decoded("summary")), " lorem  ipsum")
+        self.assertEqual(as_str(ev.decoded("summary")), "lorem  ipsum")
 
     async def test_emoji_start_many_space(self) -> None:
         cal, ev = create_calendar("\U0001F43B  lorem  ipsum")
         await self.proc.run(cal)
-        self.assertEqual(as_str(ev.decoded("summary")), " lorem  ipsum")
+        self.assertEqual(as_str(ev.decoded("summary")), "lorem  ipsum")
 
     async def test_emoji_mid_no_space(self) -> None:
         cal, ev = create_calendar("lorem" "\U0001F43B" "ipsum")
@@ -74,9 +74,9 @@ class EmojiTest(unittest.IsolatedAsyncioTestCase):
     async def test_emoji_end_one_space(self) -> None:
         cal, ev = create_calendar("lorem  ipsum \U0001F43B")
         await self.proc.run(cal)
-        self.assertEqual(as_str(ev.decoded("summary")), "lorem  ipsum ")
+        self.assertEqual(as_str(ev.decoded("summary")), "lorem  ipsum")
 
     async def test_emoji_end_many_space(self) -> None:
         cal, ev = create_calendar("lorem  ipsum  \U0001F43B")
         await self.proc.run(cal)
-        self.assertEqual(as_str(ev.decoded("summary")), "lorem  ipsum ")
+        self.assertEqual(as_str(ev.decoded("summary")), "lorem  ipsum")

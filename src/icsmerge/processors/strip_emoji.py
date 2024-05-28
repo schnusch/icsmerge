@@ -49,7 +49,7 @@ class EmojiStripper(object):
             # self.old_text[i:k] is the emoji with surrounding whitespace
             # self.old_text[j] is the emoji
             span = self.old_text[i:k]
-            if k - i == 1:
+            if k - i == 1 or i == 0 or k == len(self.new_text):
                 space = ""
             elif "\n" in span or "\r" in span:
                 space = "\n"

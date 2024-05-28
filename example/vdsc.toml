@@ -8,6 +8,9 @@ url = 'https://club-aquarium.de/events/index.ics'
 
 [calendars.baerenzwinter]
 url = 'https://www.exmatrikulationsamt.de/downloads/schnusch/ics/baerenzwinger.ics'
+processors = [
+    { name = 'strip_emoji', args.properties = [ 'summary' ] },
+]
 
 [calendars.borsi]
 url = 'https://www.exmatrikulationsamt.de/downloads/schnusch/ics/borsi.ics'
@@ -52,4 +55,5 @@ processors = [
 Studentenclub Wu5 e. V.
 August-Bebel-Straße 12
 01219 Dresden''' } },
+    { name = 'strip_emoji', args.properties = [ 'summary' ] },
 ]

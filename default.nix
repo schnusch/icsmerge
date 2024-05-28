@@ -2,6 +2,7 @@
 , buildPythonApplication
 , aiohttp
 , black
+, emoji
 , flake8
 , icalendar
 , isort
@@ -20,6 +21,7 @@ buildPythonApplication {
 
   propagatedBuildInputs = [
     aiohttp
+    emoji
     icalendar
   ] ++ lib.optional (pythonOlder "3.11") tomli;
 

@@ -1,6 +1,6 @@
 """
 icsmerge
-Copyright (C) 2023  schnusch
+Copyright (C) 2023-2024  schnusch
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -40,5 +40,6 @@ all_processors = dict(
         "add_default_timezone",
         "filter_out",
         "mod_uid",
+        "strip_emoji",
     ]
 )  # type: Dict[str, Type[CalendarProcessor]]

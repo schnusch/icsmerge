@@ -19,7 +19,7 @@ url = 'https://www.exmatrikulationsamt.de/downloads/schnusch/ics/borsi.ics'
 url = 'https://www.exmatrikulationsamt.de/downloads/schnusch/ics/club11.ics'
 
 [calendars.countdown]
-url = 'https://www.exmatrikulationsamt.de/downloads/schnusch/ics/countdown.ics'
+url = 'https://countdowndresden.de/events_/liste/?ical=1'
 
 [calendars.gag18]
 url = 'https://calendar.google.com/calendar/ical/kellerklubgag18@gmail.com/public/basic.ics'

@@ -16,7 +16,13 @@ processors = [
 url = 'https://www.exmatrikulationsamt.de/downloads/schnusch/ics/borsi.ics'
 
 [calendars.club11]
-url = 'https://www.exmatrikulationsamt.de/downloads/schnusch/ics/club11.ics'
+url = 'https://cloud.clubelf.de/remote.php/dav/public-calendars/AbiNossEHEWpfC4d?export'
+processors = [
+    { name = 'add_default_property', args = { url = 'https://clubelf.de/kalender/', location = '''
+Club 11 e.V.
+Hochschulstraße 48
+01069 Dresden''' } },
+]
 
 [calendars.countdown]
 url = 'https://countdowndresden.de/events_/liste/?ical=1'

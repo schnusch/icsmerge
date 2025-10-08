@@ -40,6 +40,12 @@ Fritz-Löffler-Str. 16
 [calendars.gutzkowclub]
 url = 'https://www.exmatrikulationsamt.de/downloads/schnusch/ics/gutzkowclub.ics'
 
+[calendars.knm]
+url = 'https://cloud.exma.de/remote.php/dav/public-calendars/sAbQMXGH5mmggQSk/?export'
+processors = [
+    { name = 'add_default_property', args.url = 'https://cloud.exma.de/apps/calendar/p/sAbQMXGH5mmggQSk' }
+]
+
 [calendars.'häma']
 url = 'https://www.club-haengemathe.de/events.ics'
 
@@ -50,6 +56,12 @@ url = 'https://www.exmatrikulationsamt.de/downloads/schnusch/ics/novitatis.ics'
 url = 'https://www.exmatrikulationsamt.de/downloads/schnusch/ics/traumtaenzer.ics'
 processors = [
     { name = 'filter_out', args.summary.match = 'Cocktailabend' },
+]
+
+[calendars.vdsc]
+url = 'https://cloud.exma.de/remote.php/dav/public-calendars/y8dy2JPTFjKBy5Kg/?export'
+processors = [
+    { name = 'add_default_property', args.url = 'https://cloud.exma.de/apps/calendar/p/y8dy2JPTFjKBy5Kg' }
 ]
 
 [calendars.wu5]

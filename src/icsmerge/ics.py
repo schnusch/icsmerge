@@ -1,6 +1,6 @@
 """
 icsmerge
-Copyright (C) 2023  schnusch
+Copyright (C) 2023-2025  schnusch
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -17,7 +17,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-import itertools
 from collections.abc import Iterable
 from datetime import date, datetime, time, timezone
 from typing import (
@@ -27,11 +26,11 @@ from typing import (
     List,
     NewType,
     Optional,
-    Set,
     Tuple,
     TypedDict,
     Union,
 )
+from zoneinfo import ZoneInfo
 
 from dateutil.rrule import rrulestr  # type: ignore
 from icalendar import Calendar, Event, Timezone  # type: ignore
@@ -58,6 +57,24 @@ def as_str(x: Union[bytes, str]) -> str:
         return x
 
 
+def decode_tz_aware(event: Event, property: str) -> Union[date, datetime, time]:
+    value = event[property]
+    dt = event._decode(
+        property,
+        value[0] if isinstance(value, list) and value else value,
+    )
+    if isinstance(dt, (datetime, time)):
+        try:
+            tzid = value.params["tzid"]
+        except KeyError:
+            pass
+        else:
+            dt = dt.replace(tzinfo=ZoneInfo(tzid))
+    elif not isinstance(dt, date):
+        raise TypeError
+    return dt
+
+
 def iter_property_items(
     component: Component,
     recursive: bool = True,
@@ -78,7 +95,7 @@ def list_of_dict_events(
     for vevent in cal.walk("vevent"):
         try:
             summary = as_str(vevent.decoded("summary"))
-            dtstart = vevent.decoded("dtstart")
+            dtstart = decode_tz_aware(vevent, "dtstart")
         except KeyError:
             continue
         location = as_str(vevent.decoded("location", ""))
@@ -117,11 +134,9 @@ def list_of_dict_events(
 
 def get_dtend(event: Event) -> Union[date, datetime, time]:
     try:
-        dtend = event.decoded("dtend")
-        if isinstance(dtend, list) and dtend:
-            dtend = dtend[0]
+        dtend = decode_tz_aware(event, "dtend")
     except KeyError:
-        dtstart = event.decoded("dtstart")
+        dtstart = decode_tz_aware(event, "dtstart")
         if isinstance(dtstart, list) and dtstart:
             dtstart = dtstart[0]
         duration = event.decoded("duration")
@@ -134,18 +149,18 @@ def get_dtend(event: Event) -> Union[date, datetime, time]:
 
 
 def _with_dtstart(event: Event) -> Tuple[Union[None, datetime], Event]:
-    dtstart = None
+    dtstart = None  # type: Optional[datetime]
     try:
-        dtstart = event.decoded("dtstart")
+        decoded = decode_tz_aware(event, "dtstart")
     except KeyError:
         pass
     else:
-        if isinstance(dtstart, list) and dtstart:
-            dtstart = dtstart[0]
-        if isinstance(dtstart, date):
-            dtstart = datetime.combine(dtstart, time.min)
+        if isinstance(decoded, datetime):
+            dtstart = decoded
+        elif isinstance(decoded, date):
+            dtstart = datetime.combine(decoded, time.min)
         else:
-            assert isinstance(dtstart, datetime)
+            raise TypeError
     return (dtstart, event)
 
 
@@ -167,7 +182,7 @@ def event_has_passed(
         return False
 
     try:
-        dtstart = event.decoded("dtstart")
+        dtstart = decode_tz_aware(event, "dtstart")
     except KeyError:
         # keep malformed events
         return False
@@ -226,19 +241,24 @@ def timezones_by_tzid(timezones: Iterable[Timezone]) -> Dict[TZID, Timezone]:
             tzid = tzid[0]
         saved_tz = by_tzid.setdefault(TZID(as_str(tzid)), tz)
         if saved_tz is not tz:
+            # two timezones definitions with the same TZID found
             pass  # TODO see if the same
     return by_tzid
 
 
-def get_used_tzids(event: Event) -> Set[TZID]:
-    tzids = set()
+def get_used_timezones(
+    event: Event,
+    timezones: Dict[TZID, Timezone],
+) -> Dict[TZID, Timezone]:
+    tzids = {}  # type: Dict[TZID, Timezone]
     for _, prop, value in iter_property_items(event):
         for value in value if isinstance(value, list) else [value]:
             try:
                 tzid = value.params["tzid"]
             except KeyError:
                 continue
-            tzids.add(TZID(as_str(tzid)))
+            tzid = TZID(as_str(tzid))
+            tzids[tzid] = timezones[tzid]
     return tzids
 
 
@@ -250,25 +270,35 @@ def merge(
 ) -> Calendar:
     if now is None:
         now = datetime.now(timezone.utc)
-    events = sorted_events(
-        itertools.chain.from_iterable(cal.walk("vevent") for cal in calendars),
-        now=now,
-    )
+    events = []  # type: List[Event]
+    timezones = {}  # type: Dict[TZID, Timezone]
+    for cal in calendars:
+        calendar_events = sorted_events(
+            count_events(cal.walk("vevent")),
+            now=now,
+        )
 
-    timezones = timezones_by_tzid(
-        itertools.chain.from_iterable(cal.walk("vtimezone") for cal in calendars)
-    )
-    tzids = set()
-    for event in events:
-        tzids |= get_used_tzids(event)
+        all_calendar_timezones = timezones_by_tzid(cal.walk("vtimezone"))
+        for event in calendar_events:
+            for tzid, vtimezone in get_used_timezones(
+                event,
+                all_calendar_timezones,
+            ).items():
+                tz = ZoneInfo(tzid)
+                # We use the system's zoneinfo instead of decoding VTIMEZONE,
+                # so we should ensure they are the same.
+                # TODO assert vtimezone == tz
+                saved_vtimezone = timezones.setdefault(tzid, vtimezone)
+                if saved_vtimezone is not vtimezone:
+                    pass  # TODO assert saved_vtimezone == vtimezone
+
+        events.extend(calendar_events)
 
     merged = Calendar()
     merged.add("prodid", prodid)
     merged.add("version", "2.0")
-    for tzid in sorted(tzids):
-        if tzid not in timezones:
-            raise NotImplementedError("missing timezone %r" % tzid)
-        merged.add_component(timezones[tzid])
+    for vtimezone in timezones.values():
+        merged.add_component(vtimezone)
     for event in events:
         merged.add_component(event)
 

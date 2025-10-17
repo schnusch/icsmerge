@@ -5,6 +5,9 @@ maxsize = 0
 
 [calendars.aqua]
 url = 'https://club-aquarium.de/events/index.ics'
+processors = [
+    { name = 'strip_emoji', args.properties = [ 'summary' ] },
+]
 
 [calendars.baerenzwinter]
 url = 'https://www.exmatrikulationsamt.de/downloads/schnusch/ics/baerenzwinger.ics'

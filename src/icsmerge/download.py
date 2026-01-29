@@ -1,6 +1,6 @@
 """
 icsmerge
-Copyright (C) 2023  schnusch
+Copyright (C) 2023-2026  schnusch
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -27,8 +27,6 @@ from typing import AsyncIterator, BinaryIO, Optional, Tuple
 
 import aiohttp
 from icalendar import Calendar  # type: ignore
-
-CHUNK_SIZE = 16 * 1024
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +64,7 @@ async def _write_ics_to_disk(
     )
     try:
         data = b""
-        async for chunk in resp.content.iter_chunked(CHUNK_SIZE):
+        async for chunk in resp.content.iter_any():
             data += chunk
             if maxsize > 0 and len(data) >= maxsize:
                 raise FileTooLargeError
@@ -162,7 +160,7 @@ if __name__ == "__main__":
         sys.stdout.fileno(), "wb", closefd=False
     ) as stdout:
         while True:
-            buf = fp.read(CHUNK_SIZE)
+            buf = fp.read(16 * 1024)
             if not buf:
                 break
             stdout.write(buf)

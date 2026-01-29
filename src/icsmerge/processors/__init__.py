@@ -38,6 +38,7 @@ all_processors = dict(
     for name in [
         "add_default_property",
         "add_default_timezone",
+        "add_default_image_from_nextcloud_attachment",
         "filter_out",
         "mod_uid",
         "strip_emoji",

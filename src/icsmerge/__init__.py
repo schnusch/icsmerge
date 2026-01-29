@@ -23,6 +23,7 @@ import json
 import logging
 import os
 import tempfile
+import sys
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
@@ -142,6 +143,12 @@ def main(argv: Optional[List[str]] = None) -> None:
     p = argparse.ArgumentParser(description="TODO")
     p.add_argument("-c", "--config", required=True, help="configuration file")
     args = p.parse_args(argv)
+
+    logging.basicConfig(
+        format="[%(asctime)s] %(levelname)-8s %(name)s %(message)s",
+        level=logging.INFO,
+        stream=sys.stderr,
+    )
 
     config = load_config(args.config)
     asyncio.run(run(config))

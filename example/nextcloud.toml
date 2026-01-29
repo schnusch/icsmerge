@@ -1,0 +1,14 @@
+destdir = '/tmp/icsmerge/dest'
+destmode = 0o644
+workdir = '/tmp/icsmerge/work'
+maxsize = 0
+
+[calendars.nextcloud]
+url = 'https://cloud.example.com/remote.php/dav/public-calendars/FVCZtSrQnJ5KoWdg/?export'
+
+[[calendars.nextcloud.processors]]
+name = 'add_default_image_from_nextcloud_attachment'
+args.webdav = 'https://cloud.example.com/public.php/webdav/'
+args.username = 'everything after https://cloud.example.com/s/'
+args.remove_prefix = '/subfolder/'
+args.maxsize = 1048576

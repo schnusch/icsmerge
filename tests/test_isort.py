@@ -32,7 +32,6 @@ class ISort(unittest.TestCase):
                 "--quiet",
                 "--profile",
                 "black",
-                "setup.py",
                 "src/icsmerge",
                 "tests",
             ],

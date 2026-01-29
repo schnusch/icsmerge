@@ -30,7 +30,6 @@ class Black(unittest.TestCase):
                 "black",
                 "--check",
                 "--quiet",
-                "setup.py",
                 "src/icsmerge",
                 "tests",
             ],

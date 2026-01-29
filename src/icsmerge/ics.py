@@ -1,6 +1,6 @@
 """
 icsmerge
-Copyright (C) 2023-2025  schnusch
+Copyright (C) 2023-2026  schnusch
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -274,7 +274,7 @@ def merge(
     timezones = {}  # type: Dict[TZID, Timezone]
     for cal in calendars:
         calendar_events = sorted_events(
-            count_events(cal.walk("vevent")),
+            cal.walk("vevent"),
             now=now,
         )
 

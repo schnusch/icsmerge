@@ -17,6 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+import binascii
 import io
 import logging
 from typing import Optional  # noqa: F401
@@ -32,6 +33,19 @@ from ..ics import as_str, iter_property_items
 from . import CalendarProcessor
 
 logger = logging.getLogger(__name__)
+
+
+class vBinaryFixed(vBinary):
+    # vBinary re-encodes bytes as utf-8
+    # https://github.com/collective/icalendar/blob/v6.3.1/src/icalendar/prop.py#L81
+    # https://github.com/collective/icalendar/blob/v6.3.1/src/icalendar/parser_tools.py#L26-L36
+
+    def __init__(self, obj: bytes):
+        super().__init__(b"")
+        self.obj = obj
+
+    def to_ical(self) -> str:
+        return binascii.b2a_base64(self.obj, newline=False)
 
 
 class Processor(CalendarProcessor):
@@ -137,7 +151,7 @@ class Processor(CalendarProcessor):
                                     )
                                 out.write(chunk)
                         # add IMAGE:
-                        value = vBinary(out.getvalue())
+                        value = vBinaryFixed(out.getvalue())
                         value.params["fmttype"] = fmttype
                         event["image"] = value
                         logger.debug("added image %s", url)

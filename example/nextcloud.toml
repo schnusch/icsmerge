@@ -8,7 +8,5 @@ url = 'https://cloud.example.com/remote.php/dav/public-calendars/FVCZtSrQnJ5KoWd
 
 [[calendars.nextcloud.processors]]
 name = 'add_default_image_from_nextcloud_attachment'
-args.webdav = 'https://cloud.example.com/public.php/webdav/'
-args.username = 'everything after https://cloud.example.com/s/'
+args.webdav = 'https://cloud.exma.de/public.php/dav/files/FVCZtSrQnJ5KoWdg/'
 args.remove_prefix = '/subfolder/'
-args.maxsize = 1048576

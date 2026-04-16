@@ -17,35 +17,18 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-import binascii
-import io
 import logging
 from typing import Optional  # noqa: F401
 from typing import Any, Dict
-from urllib.parse import quote, urljoin, urlparse, urlunparse
+from urllib.parse import quote, urljoin
 
-import aiohttp
-from icalendar import Calendar, vBinary  # type: ignore[import-untyped]
+from icalendar import Calendar, vText  # type: ignore[import-untyped]
 
 from ..config.util import ConfigPath, str_option_path
-from ..download import FileTooLargeError
 from ..ics import as_str, iter_property_items
 from . import CalendarProcessor
 
 logger = logging.getLogger(__name__)
-
-
-class vBinaryFixed(vBinary):
-    # vBinary re-encodes bytes as utf-8
-    # https://github.com/collective/icalendar/blob/v6.3.1/src/icalendar/prop.py#L81
-    # https://github.com/collective/icalendar/blob/v6.3.1/src/icalendar/parser_tools.py#L26-L36
-
-    def __init__(self, obj: bytes):
-        super().__init__(b"")
-        self.obj = obj
-
-    def to_ical(self) -> str:
-        return binascii.b2a_base64(self.obj, newline=False)
 
 
 class Processor(CalendarProcessor):
@@ -60,102 +43,43 @@ class Processor(CalendarProcessor):
             raise ValueError(
                 "option %s: must be a string" % str_option_path(*path, "webdav")
             )
-        if "username" not in args or not isinstance(args["username"], str):
-            raise ValueError(
-                "option %s: must be a string" % str_option_path(*path, "username")
-            )
-        if "password" in args and not isinstance(args["password"], str):
-            raise ValueError(
-                "option %s: must be a string" % str_option_path(*path, "password")
-            )
         if "remove_prefix" in args and not isinstance(args["remove_prefix"], str):
             raise ValueError(
                 "option %s: must be a string" % str_option_path(*path, "remove_prefix")
             )
-        if "maxsize" in args and not isinstance(args["maxsize"], int):
-            raise ValueError(
-                "option %s: must be an integer" % str_option_path(*path, "maxsize")
-            )
-        webdav = urlparse(args["webdav"])
-        if webdav.scheme not in ("http", "https"):
-            raise ValueError(
-                "option %s: must be a http:// or https:// URL"
-                % str_option_path(*path, "webdav")
-            )
-        self.webdav = urlunparse(
-            (
-                webdav.scheme,
-                webdav.netloc.rsplit("@", 1)[-1],  # remove auth from URL
-                webdav.path.rstrip("/") + "/",  # end with / for urljoin later
-                "",  # parameters
-                "",  # query
-                "",  # fragment
-            )
-        )
-        self.username = args["username"]
-        self.password = args.get("password", "")
+        self.webdav = args["webdav"].rstrip("/") + "/"
         self.remove_prefix = args.get("remove_prefix", "")
-        self.maxsize = args.get("maxsize", -1)
 
     async def run(self, cal: Calendar) -> None:
-        async with aiohttp.ClientSession(
-            auth=aiohttp.BasicAuth(self.username, self.password),
-        ) as session:
-            for event in cal.walk("vevent"):
-                if "image" in event:
+        for event in cal.walk("vevent"):
+            if "image" in event:
+                continue
+
+            for comp, name, value in iter_property_items(event, recursive=False):
+                if name.upper() != "ATTACH" or "filename" not in value.params:
                     continue
 
-                for comp, name, value in iter_property_items(event, recursive=False):
-                    if name.upper() != "ATTACH" or "filename" not in value.params:
+                # check if filename matches
+                filename = as_str(value.params["filename"])
+                if not filename.startswith(self.remove_prefix):
+                    continue
+                filename = filename[len(self.remove_prefix) :]
+
+                # get MIME type and skip if not an image/*
+                try:
+                    fmttype = as_str(value.params["fmttype"])  # type: Optional[str]
+                except KeyError:
+                    fmttype = None
+                else:
+                    if not fmttype.startswith("image/"):
                         continue
 
-                    # check if filename matches
-                    filename = as_str(value.params["filename"])
-                    if not filename.startswith(self.remove_prefix):
-                        continue
-                    filename = filename[len(self.remove_prefix) :]
-
-                    # get MIME type and skip if not an image/*
-                    try:
-                        fmttype = as_str(value.params["fmttype"])  # type: Optional[str]
-                    except KeyError:
-                        fmttype = None
-                    else:
-                        if not fmttype.startswith("image/"):
-                            continue
-
-                    url = urljoin(
-                        self.webdav,
-                        quote(filename.lstrip("/"), safe="/"),
-                    )
-                    try:
-                        # download the attachment
-                        out = io.BytesIO()
-                        async with session.get(url) as resp:
-                            resp.raise_for_status()
-                            if fmttype is None:
-                                fmttype = resp.content_type.split(";", 1)[0]
-                                if not fmttype.startswith("image/"):
-                                    logger.debug(
-                                        "skipping %s due to its Content-Type: %s",
-                                        url,
-                                        resp.content_type,
-                                    )
-                                    continue
-                            size = 0
-                            async for chunk in resp.content.iter_any():
-                                size += len(chunk)
-                                if self.maxsize >= 0 and size > self.maxsize:
-                                    raise FileTooLargeError(
-                                        "file is larger than %d bytes" % self.maxsize
-                                    )
-                                out.write(chunk)
-                        # add IMAGE:
-                        value = vBinaryFixed(out.getvalue())
-                        value.params["fmttype"] = fmttype
-                        event["image"] = value
-                        logger.debug("added image %s", url)
-                    except Exception:
-                        logger.exception("cannot download %s", url)
-                    else:
-                        break
+                url = urljoin(
+                    self.webdav,
+                    quote(filename.lstrip("/"), safe="/"),
+                )
+                # add IMAGE:
+                value = vText(url)
+                value.params["VALUE"] = "URI"
+                event["image"] = value
+                logger.debug("added image %s", url)
